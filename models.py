@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum
 
 from tortoise import Tortoise, fields, run_async
-from tortoise.contrib.pydantic import pydantic_model_creator
+from tortoise.contrib.pydantic import pydantic_model_creator, pydantic_queryset_creator
 from tortoise.models import Model
 
 
@@ -65,6 +65,11 @@ class TimestampMixin():
 class State(Model):
     id = fields.IntField(pk=True, index=True)
     name = fields.CharField(max_length=255)
+    lgas: fields.ReverseRelation["Lga"]
+
+
+    class PydanticMeta:
+        exclude = ("state", )
 
     def __str__(self):
         return self.name
@@ -75,7 +80,11 @@ class State(Model):
 class Lga(Model):
     id = fields.IntField(pk=True, index=True)
     name = fields.CharField(max_length=255)
-    state =  fields.ForeignKeyField('models.State', related_name='lgas')
+    state : fields.ForeignKeyRelation[State] =  fields.ForeignKeyField('models.State', related_name='lgas')
+
+
+    class PydanticMeta:
+        exclude = ("lga", )
 
     def __str__(self):
         return self.name
@@ -154,16 +163,7 @@ class Client(Model):
 
 
 
-user_pydantic = pydantic_model_creator(User, name="User", exclude=("is_verified", "is_active",'password_hash' ))
-user_pydanticCreate =  pydantic_model_creator(User, name="UserIn", exclude=("is_verified", "is_active","id" ))
-user_pydanticOut = pydantic_model_creator(User, name="UserOut",exclude=("password_hash"))
 
 
-lgaIn = pydantic_model_creator(Lga, name="lgaIn", exclude_readonly=True)
+Tortoise.init_models(['models'], 'models')
 
-
-client_pydantic = pydantic_model_creator(Client, name="Client")
-client_pydanticCreate = pydantic_model_creator(Client, name="ClientIn", exclude_readonly=True)
-
-blurb_pydantic = pydantic_model_creator(Blurb, name="Blurb")
-blurb_pydanticCreate = pydantic_model_creator(Blurb, name="BlurbIn", exclude_readonly=True)

@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
-from models import user_pydanticCreate, lgaIn, user_pydantic
+from py_models.users import user_pydanticCreate, user_pydantic
+from py_models.location import lgaIn
 from utils.users import *
 from schemas.users import UserBlurbIn, UserClientIn
 from pydantic import EmailStr

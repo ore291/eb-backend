@@ -4,7 +4,10 @@ import shortuuid
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from models import User, user_pydantic, user_pydanticCreate, user_pydanticOut, Client, Blurb, blurb_pydanticCreate, client_pydanticCreate, UserType
+from models import User, Client, Blurb,  UserType
+
+from py_models.users import user_pydantic, user_pydanticOut, user_pydanticCreate
+from py_models.clients import client_pydanticCreate, blurb_pydanticCreate
 from schemas.users import UserBlurbIn, UserClientIn
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
@@ -33,7 +36,6 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 
-
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -51,8 +53,6 @@ def get_password_hash(password):
 #     update_fields: List[str],
 # ) -> None:
 #     if created:
-        
-       
 
 
 async def register_blurb(background_tasks: BackgroundTasks, user: UserBlurbIn):
@@ -129,7 +129,6 @@ async def register_client(background_tasks: BackgroundTasks, email: EmailStr, ph
             **userIn, user=db_user
         )
         await client_pydanticCreate.from_tortoise_orm(client_data)
-
 
     await send_verification_email(background_tasks, [created_user.email], db_user)
 

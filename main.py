@@ -22,10 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(users.router, prefix="/api")
-app.include_router(fields.router, prefix="/api")
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 load_dotenv()
 
@@ -33,9 +29,6 @@ load_dotenv()
 db_url = os.getenv("DATABASE_URL")
 
 
-@app.get("/")
-def index():
-    return {"message": "Hello World"}
 
 
 async def init():
@@ -46,31 +39,30 @@ async def init():
         generate_schemas=True,
         add_exception_handlers=True,
     )
-    
-
-
-
-
-
-
-
 
 
 @app.on_event("startup")
-async def startup_event():
-   
+async def startup_event(): 
     await init()
 
 
 @app.on_event("shutdown")
 async def close_orm():
     await Tortoise.close_connections()
+
+
+
+
+@app.get("/")
+def index():
+    return {"message": "Hello World"}
+
+
+app.include_router(users.router, prefix="/api")
+app.include_router(fields.router, prefix="/api")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
    
 
-# register_tortoise(
-#     app,
-#     db_url=db_url,
-#     modules={"models": ["models"]},
-#     generate_schemas=True,
-#     add_exception_handlers=True,
-# )

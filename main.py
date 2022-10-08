@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from tortoise.contrib.fastapi import HTTPNotFoundError, register_tortoise
 from models import *
 from py_models.location import state_pydantic, state_pydantic_list
+from py_models.clients import product_pydantic
 from tortoise import Tortoise
-from routers import users, fields
+from routers import users, fields, clients
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi_crudrouter import MemoryCRUDRouter as CRUDRouter
 
 
 import os
@@ -60,6 +62,7 @@ def index():
 
 app.include_router(users.router, prefix="/api")
 app.include_router(fields.router, prefix="/api")
+app.include_router(clients.router, prefix="/api")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

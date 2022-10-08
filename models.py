@@ -10,6 +10,11 @@ class UserType(IntEnum):
     blurber = 2
     client = 3
 
+class TransactionType(IntEnum):
+    credit = 1
+    debit = 2
+   
+
 
 class Gender(IntEnum):
     not_specified = 1
@@ -57,16 +62,15 @@ class SocialClass(IntEnum):
     high = 3
 
 
-
 class TimestampMixin():
     created_at = fields.DatetimeField(null=True, auto_now_add=True)
     modified_at = fields.DatetimeField(null=True, auto_now=True)
+
 
 class State(Model):
     id = fields.IntField(pk=True, index=True)
     name = fields.CharField(max_length=255)
     lgas: fields.ReverseRelation["Lga"]
-
 
     class PydanticMeta:
         exclude = ("state", )
@@ -75,13 +79,11 @@ class State(Model):
         return self.name
 
 
-
-
 class Lga(Model):
     id = fields.IntField(pk=True, index=True)
     name = fields.CharField(max_length=255)
-    state : fields.ForeignKeyRelation[State] =  fields.ForeignKeyField('models.State', related_name='lgas')
-
+    state: fields.ForeignKeyRelation[State] = fields.ForeignKeyField(
+        'models.State', related_name='lgas')
 
     class PydanticMeta:
         exclude = ("lga", )
@@ -92,7 +94,8 @@ class Lga(Model):
 
 class User(Model):
     id = fields.IntField(pk=True, index=True)
-    user_type = fields.IntEnumField(enum_type=UserType, default=UserType.blurber)
+    user_type = fields.IntEnumField(
+        enum_type=UserType, default=UserType.blurber)
     email = fields.CharField(max_length=128, unique=True)
     phone = fields.CharField(max_length=11, null=False)
     username = fields.CharField(
@@ -105,8 +108,6 @@ class User(Model):
 
     # class PydanticMeta:
     #    computed = ("password",)
-      
-       
 
 
 class Blurb(Model):
@@ -162,8 +163,65 @@ class Client(Model):
     modified_at = fields.DatetimeField(auto_now=True)
 
 
+class TimestampMixin():
+    created_at = fields.DatetimeField(null=True, auto_now_add=True)
+    modified_at = fields.DatetimeField(null=True, auto_now=True)
 
+
+class Product(TimestampMixin, Model):
+    id = fields.IntField(pk=True, index=True)
+    name = fields.CharField(max_length=255, null=False, unique=True)
+    price = fields.BigIntField(default=0)
+    blurbers_count = fields.IntField(null=True , default=10)
+    price_formatted = fields.CharField(max_length=255, null=True)
+    max_file_upload = fields.IntField(default=1)
+    overall_imp = fields.IntField(null = False, default=1)
+    duration_formatted = fields.CharField(max_length=255,  null = True, default="1 day in a week")
+    active_dates = fields.JSONField(null = True, default=[])
+    is_active = fields.BooleanField(default=True)
+
+    class Meta:
+        table = "products"
+        exclude = ("transactions","plans", "plan" )
+
+
+class Transaction(TimestampMixin, Model):
+    id = fields.IntField(pk=True, index=True)
+    user = fields.ForeignKeyField('models.User', related_name='transactions')
+    product = fields.ForeignKeyField('models.Product', related_name='transactions')
+    quantity = fields.IntField(null=True, default=1)
+    amount = fields.IntField()
+    channel = fields.CharField(max_length=255, null=True, default="Paystack")
+    payment_ref = fields.IntField()
+    trans_type = fields.IntEnumField(
+        TransactionType, default=TransactionType.credit)
+   
+    class Meta:
+        table = "transactions"
+
+
+
+
+class Plan(TimestampMixin, Model):
+    id = fields.IntField(pk=True, index=True)
+    user = fields.ForeignKeyField('models.User', related_name='plans')
+    product = fields.ForeignKeyField('models.Product', related_name='plan')
+    amount_paid = fields.IntField(default=1)
+    trans_ref = fields.ForeignKeyField('models.Transaction', related_name='transactions')
+    blurbers_count = fields.IntField(null=True , default=10)
+    file_upload_count = fields.IntField(default=0)
+    # impressions_gotten
+    imp_gotten = fields.IntField(null = False, default=1)
+    start_date = fields.DatetimeField(null=True, auto_now_add=True)
+    end_date = fields.DatetimeField(null=True, auto_now=True)
+    dates = fields.JSONField(null = True, default=[])
+    is_ended = fields.BooleanField(default=True)
+    states = fields.JSONField(null = True, default=[])
+    all_states = fields.BooleanField(null = True, default=True)
+
+    class Meta:
+        table = "plans"
+        exclude = ("transactions", "user" )
 
 
 Tortoise.init_models(['models'], 'models')
-
